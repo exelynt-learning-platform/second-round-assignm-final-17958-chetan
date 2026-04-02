@@ -25,30 +25,27 @@ public class AuthService {
     }
 
     public User register(RegisterRequest request) {
-        try{
-            User user = new User();
-            user.setEmail(request.getEmail());
-            user.setName(request.getName());
-            user.setRole(Role.USER);
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
-
-            return userRepository.save(user);
-        } catch (Exception e) {
-            return null;
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("User with this email already exists");
         }
+        User user = new User();
+        user.setEmail(request.getEmail());
+        user.setName(request.getName());
+        user.setRole(Role.USER);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        return userRepository.save(user);
     }
 
     public String login(LoginBody body) {
-        Optional<User> user = userRepository.findByEmail(body.getEmail());
-        if (user.isPresent()) {
-            if (!passwordEncoder.matches(body.getPassword(), user.get().getPassword())) {
-//            throw new RuntimeException("Invalid Password");
-                return null;
-            }
+        User user = userRepository.findByEmail(body.getEmail())
+                .orElseThrow(() -> new UserWithEmailNotExistException("User not Exist"));
 
-            return jwtUtil.generateToken(user.get().getEmail());
+        if (!passwordEncoder.matches(body.getPassword(), user.getPassword())) {
+//            throw new RuntimeException("Invalid Password");
+            return null;
         }
 
-        throw new UserWithEmailNotExistException("User not Exist");
+        return jwtUtil.generateToken(user.getEmail());
     }
 }

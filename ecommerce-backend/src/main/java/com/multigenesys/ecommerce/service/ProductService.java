@@ -24,26 +24,28 @@ public class ProductService {
         return repository.findAll();
     }
 
-    public Product updateProduct(Product product){
-        return repository.findById(product.getId())
-                .map(existing ->{
-                    existing.setDescription(product.getDescription());
-                    existing.setName(product.getName());
-                    existing.setQuantity(product.getQuantity());
-                    existing.setPrice(product.getPrice());
+    public Product updateProduct(Long id,Product product){
+        Product existing = repository.findById(id)
+                .orElseThrow(() ->
+                        new ProductNotFoundException("Product with id " + id + " not found"));
 
-                    return repository.save(existing);
-                })
-                .orElse(saveProduct(product));
+        existing.setName(product.getName());
+        existing.setDescription(product.getDescription());
+        existing.setPrice(product.getPrice());
+        existing.setQuantity(product.getQuantity());
+
+        return repository.save(existing);
     }
 
     public void deleteProduct(Long id){
-        Optional<Product> product = repository.findById(id);
-        if (product.isPresent()){
-            repository.delete(product.get());
-            return;
-        }
+        Product product = repository.findById(id).orElseThrow(() ->
+                new ProductNotFoundException("Product with id " + id + " not found"));
 
-        throw new ProductNotFoundException("Product with id : "+id+" not found");
+        repository.delete(product);
+    }
+
+    public Product getProductById(Long id) {
+        return repository.findById(id).orElseThrow(() ->
+                new ProductNotFoundException("Product with id " + id + " not found"));
     }
 }
