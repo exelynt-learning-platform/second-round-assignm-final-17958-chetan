@@ -13,11 +13,23 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
     @Bean
-    protected SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
-        http.authorizeHttpRequests( req ->req
-//                .requestMatchers("").authenticated()
-                .anyRequest().permitAll()
-        ).csrf(AbstractHttpConfigurer::disable);
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(req -> req
+
+                        // Public APIs
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/products/**").permitAll()
+
+                        // Protected APIs
+                        .requestMatchers("/api/cart/**").authenticated()
+                        .requestMatchers("/api/orders/**").authenticated()
+                        .requestMatchers("/api/payment/**").authenticated()
+
+                        .anyRequest().authenticated()
+                );
 
         return http.build();
     }
